@@ -9,7 +9,8 @@ pub enum Tyfes {
     Nothing,
     Jpeg,
     Png,
-    Gif
+    Gif,
+    Bmp
 }
 
 pub enum Markers {
@@ -62,6 +63,9 @@ impl Markers {
             Markers::GifStart2 => 0x49,
             Markers::GifStart3 => 0x46,
 
+            Markers::BmpSoi => 0x42,
+            Markers::BmpStart2 => 0x4D,
+
             _ => {
                 0x00
             }
@@ -99,7 +103,8 @@ impl Tyfe {
             "jpg" |
             "jpeg" |
             "png" |
-            "gif" => {
+            "gif" |
+            "bmp" => {
                 self.what_is_this()
             },
             _ => { Tyfes::Nothing }
@@ -122,10 +127,15 @@ impl Tyfe {
             return Tyfes::Png;
         }
 
-        if *data.get(0).unwrap()  == Markers::GifSoi.val()
+        if *data.get(0).unwrap() == Markers::GifSoi.val()
             && *data.get(1).unwrap() == Markers::GifStart2.val()
             && *data.get(2).unwrap() == Markers::GifStart3.val() {
             return Tyfes::Gif;
+        }
+
+        if *data.get(0).unwrap() == Markers::BmpSoi.val()
+            && *data.get(1).unwrap() == Markers::BmpStart2.val() {
+            return Tyfes::Bmp;
         }
 
         Tyfes::Nothing
@@ -144,7 +154,8 @@ mod tests {
         let file_exts = vec![
             ".jpg",
             ".gif",
-            ".png"
+            ".png",
+            ".bmp"
         ];
 
         for ext in file_exts {
@@ -152,6 +163,7 @@ mod tests {
                 Tyfes::Jpeg => "JPEG",
                 Tyfes::Png => "PNG",
                 Tyfes::Gif => "GIF",
+                Tyfes::Bmp => "BMP",
                 _ => "Hmm?"
             });
         }

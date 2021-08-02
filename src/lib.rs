@@ -7,6 +7,7 @@
 
 pub enum Tyfes {
     Nothing,
+    FPaper,
     Jpeg,
     Png,
     Gif,
@@ -17,6 +18,13 @@ pub enum Tyfes {
 }
 
 pub enum Markers {
+    FPaperStart,
+    FPaperStart2,
+    FPaperStart3,
+    FPaperStart4,
+    FPaperStart5,
+    FPaperStart6,
+
     JpegSoi,
     JpegStart,
 
@@ -55,16 +63,26 @@ pub struct Tyfe {
 impl Markers {
     fn val(&self) -> u8 {
         match *self {
+            Markers::FPaperStart => 0x02,
+            Markers::FPaperStart2
+                | Markers::GifStart3
+                | Markers::PdfStart4 => 0x46,
+            Markers::FPaperStart3
+                | Markers::PngStart2
+                | Markers::WebpStart4
+                | Markers::PdfStart2 => 0x50,
+            Markers::FPaperStart4 => 0x61,
+            Markers::FPaperStart5 => 0x67,
+            Markers::FPaperStart6 => 0x65,
+
             Markers::JpegSoi => 0xD8,
             Markers::JpegStart => 0xFF,
 
             Markers::PngSoi => 0x89,
-            Markers::PngStart2 | Markers::WebpStart4 | Markers::PdfStart2 => 0x50,
             Markers::PngStart3 => 0x4E,
             Markers::PngStart4 | Markers::GifSoi => 0x47,
 
             Markers::GifStart2 => 0x49,
-            Markers::GifStart3 | Markers::PdfStart4 => 0x46,
 
             Markers::BmpSoi | Markers::WebpStart3 => 0x42,
             Markers::BmpStart2 => 0x4D,
@@ -91,6 +109,7 @@ impl Default for Tyfe {
             extension : "".to_string(),
             filename  : "".to_string(),
             binary_ext: vec![
+                ".fpaper",
                 ".jpg",
                 ".jpeg",
                 ".png",
@@ -112,13 +131,14 @@ impl Tyfe {
             .and_then(std::ffi::OsStr::to_str).unwrap().to_string();
 
         return match &*self.extension.trim() {
-            "jpg"  |
-            "jpeg" |
-            "png"  |
-            "gif"  |
-            "bmp"  |
-            "webp" |
-            "pdf"  |
+            "fpaper" |
+            "jpg"    |
+            "jpeg"   |
+            "png"    |
+            "gif"    |
+            "bmp"    |
+            "webp"   |
+            "pdf"    |
             "ico" => {
                 self.what_is_this()
             },
@@ -128,6 +148,15 @@ impl Tyfe {
 
     fn what_is_this(&self) -> Tyfes {
         let data = std::fs::read(&self.filename).unwrap();
+
+        if *data.get(0).unwrap() == Markers::FPaperStart.val()
+            && *data.get(1).unwrap() == Markers::FPaperStart2.val()
+            && *data.get(2).unwrap() == Markers::FPaperStart3.val()
+            && *data.get(3).unwrap() == Markers::FPaperStart4.val()
+            && *data.get(4).unwrap() == Markers::FPaperStart5.val()
+            && *data.get(5).unwrap() == Markers::FPaperStart6.val() {
+            return Tyfes::FPaper;
+        }
 
         if *data.get(0).unwrap() == Markers::JpegStart.val()
             && *data.get(1).unwrap() == Markers::JpegSoi.val()
@@ -188,6 +217,7 @@ mod tests {
     fn hmm() {
         let mut init = Tyfe::default();
         let file_exts = vec![
+            ".fpaper",
             ".jpg",
             ".gif",
             ".png",
@@ -199,6 +229,7 @@ mod tests {
 
         for ext in file_exts {
             println!("{}", match init.check(format!("formats/test{}", ext).to_string()) {
+                Tyfes::FPaper => "FPaper",
                 Tyfes::Jpeg => "JPEG",
                 Tyfes::Png => "PNG",
                 Tyfes::Gif => "GIF",

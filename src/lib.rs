@@ -12,7 +12,8 @@ pub enum Tyfes {
     Gif,
     Bmp,
     WebP,
-    Pdf
+    Pdf,
+    Ico
 }
 
 pub enum Markers {
@@ -74,6 +75,9 @@ impl Markers {
             Markers::PdfSoi => 0x25,
             Markers::PdfStart3 => 0x44,
 
+            Markers::IcoSoi => 0x00,
+            Markers::IcoStart3 => 0x01,
+
             _ => {
                 0x00
             }
@@ -114,7 +118,8 @@ impl Tyfe {
             "gif"  |
             "bmp"  |
             "webp" |
-            "pdf" => {
+            "pdf"  |
+            "ico" => {
                 self.what_is_this()
             },
             _ => { Tyfes::Nothing }
@@ -162,6 +167,13 @@ impl Tyfe {
             return Tyfes::Pdf;
         }
 
+        if *data.get(0).unwrap() == Markers::IcoSoi.val()
+            && *data.get(1).unwrap() == Markers::IcoSoi.val()
+            && *data.get(2).unwrap() == Markers::IcoStart3.val()
+            && *data.get(3).unwrap() == Markers::IcoSoi.val() {
+            return Tyfes::Ico;
+        }
+
         Tyfes::Nothing
     }
 }
@@ -181,7 +193,8 @@ mod tests {
             ".png",
             ".bmp",
             ".webp",
-            ".pdf"
+            ".pdf",
+            ".ico"
         ];
 
         for ext in file_exts {
@@ -192,6 +205,7 @@ mod tests {
                 Tyfes::Bmp => "BMP",
                 Tyfes::WebP => "WebP",
                 Tyfes::Pdf => "PDF",
+                Tyfes::Ico => "ICO",
                 _ => "Hmm?"
             });
         }

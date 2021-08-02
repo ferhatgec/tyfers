@@ -11,7 +11,8 @@ pub enum Tyfes {
     Png,
     Gif,
     Bmp,
-    WebP
+    WebP,
+    Pdf
 }
 
 pub enum Markers {
@@ -57,19 +58,21 @@ impl Markers {
             Markers::JpegStart => 0xFF,
 
             Markers::PngSoi => 0x89,
-            Markers::PngStart2 => 0x50,
+            Markers::PngStart2 | Markers::WebpStart4 | Markers::PdfStart2 => 0x50,
             Markers::PngStart3 => 0x4E,
             Markers::PngStart4 | Markers::GifSoi => 0x47,
 
             Markers::GifStart2 => 0x49,
-            Markers::GifStart3 => 0x46,
+            Markers::GifStart3 | Markers::PdfStart4 => 0x46,
 
             Markers::BmpSoi | Markers::WebpStart3 => 0x42,
             Markers::BmpStart2 => 0x4D,
 
             Markers::WebpSoi => 0x57,
             Markers::WebpStart2 => 0x45,
-            Markers::WebpStart4 => 0x50,
+
+            Markers::PdfSoi => 0x25,
+            Markers::PdfStart3 => 0x44,
 
             _ => {
                 0x00
@@ -110,7 +113,8 @@ impl Tyfe {
             "png"  |
             "gif"  |
             "bmp"  |
-            "webp" => {
+            "webp" |
+            "pdf" => {
                 self.what_is_this()
             },
             _ => { Tyfes::Nothing }
@@ -151,6 +155,13 @@ impl Tyfe {
             return Tyfes::WebP;
         }
 
+        if *data.get(0).unwrap() == Markers::PdfSoi.val()
+            && *data.get(1).unwrap() == Markers::PdfStart2.val()
+            && *data.get(2).unwrap() == Markers::PdfStart3.val()
+            && *data.get(3).unwrap() == Markers::PdfStart4.val() {
+            return Tyfes::Pdf;
+        }
+
         Tyfes::Nothing
     }
 }
@@ -169,7 +180,8 @@ mod tests {
             ".gif",
             ".png",
             ".bmp",
-            ".webp"
+            ".webp",
+            ".pdf"
         ];
 
         for ext in file_exts {
@@ -179,6 +191,7 @@ mod tests {
                 Tyfes::Gif => "GIF",
                 Tyfes::Bmp => "BMP",
                 Tyfes::WebP => "WebP",
+                Tyfes::Pdf => "PDF",
                 _ => "Hmm?"
             });
         }

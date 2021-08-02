@@ -10,7 +10,8 @@ pub enum Tyfes {
     Jpeg,
     Png,
     Gif,
-    Bmp
+    Bmp,
+    WebP
 }
 
 pub enum Markers {
@@ -63,8 +64,12 @@ impl Markers {
             Markers::GifStart2 => 0x49,
             Markers::GifStart3 => 0x46,
 
-            Markers::BmpSoi => 0x42,
+            Markers::BmpSoi | Markers::WebpStart3 => 0x42,
             Markers::BmpStart2 => 0x4D,
+
+            Markers::WebpSoi => 0x57,
+            Markers::WebpStart2 => 0x45,
+            Markers::WebpStart4 => 0x50,
 
             _ => {
                 0x00
@@ -100,11 +105,12 @@ impl Tyfe {
             .and_then(std::ffi::OsStr::to_str).unwrap().to_string();
 
         return match &*self.extension.trim() {
-            "jpg" |
+            "jpg"  |
             "jpeg" |
-            "png" |
-            "gif" |
-            "bmp" => {
+            "png"  |
+            "gif"  |
+            "bmp"  |
+            "webp" => {
                 self.what_is_this()
             },
             _ => { Tyfes::Nothing }
@@ -138,6 +144,13 @@ impl Tyfe {
             return Tyfes::Bmp;
         }
 
+        if *data.get(8).unwrap() == Markers::WebpSoi.val()
+            && *data.get(9).unwrap() == Markers::WebpStart2.val()
+            && *data.get(10).unwrap() == Markers::WebpStart3.val()
+            && *data.get(11).unwrap() == Markers::WebpStart4.val() {
+            return Tyfes::WebP;
+        }
+
         Tyfes::Nothing
     }
 }
@@ -155,7 +168,8 @@ mod tests {
             ".jpg",
             ".gif",
             ".png",
-            ".bmp"
+            ".bmp",
+            ".webp"
         ];
 
         for ext in file_exts {
@@ -164,6 +178,7 @@ mod tests {
                 Tyfes::Png => "PNG",
                 Tyfes::Gif => "GIF",
                 Tyfes::Bmp => "BMP",
+                Tyfes::WebP => "WebP",
                 _ => "Hmm?"
             });
         }

@@ -1,6 +1,6 @@
 [package]
 name = "tyfers"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["\"ferhatgec\""]
 edition = "2018"
 description = "file-type information crate"
